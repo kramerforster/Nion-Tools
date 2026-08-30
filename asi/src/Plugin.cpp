@@ -8,6 +8,7 @@
 #include <string>
 #include <winsock2.h>
 #include <cstring>
+#include <vector>
 
 namespace samp = sampapi::v037r3;
 
@@ -17,13 +18,6 @@ Plugin::Plugin(HMODULE hndl) : hModule(hndl) {
     hookCTimerUpdate.install();
 }
 
-void sampSendChat(const char* command) {
-    auto* input = samp::RefInputBox();
-
-    if (input) {
-        input->Send(command);
-    }
-}
 void HandleVehicleCommand(const char* arg, const std::string& action, const std::string& usageMsg) {
     if (!arg || std::strlen(arg) == 0) {
         samp::RefChat()->AddMessage(0xFFFFFFFF, usageMsg.c_str());
@@ -32,6 +26,9 @@ void HandleVehicleCommand(const char* arg, const std::string& action, const std:
     int id = std::atoi(arg);
     uint16_t targetPlayerID = static_cast<uint16_t>(id);
     samp::CPlayerPool* pPlayerPool = samp::RefNetGame()->GetPlayerPool();
+
+    if (!pPlayerPool) return;
+
     samp::CRemotePlayer* pPlayer = pPlayerPool->GetPlayer(targetPlayerID);
     if (!pPlayer || !pPlayer->DoesExist()) {
         samp::RefChat()->AddMessage(0xFFFFFFFF, "Игрок не в стриме.");
@@ -44,9 +41,11 @@ void HandleVehicleCommand(const char* arg, const std::string& action, const std:
     }
     char msg[128];
     std::sprintf(msg, "/%s %u", action.c_str(), vehicleId);
-    sampSendChat(msg);
-}
 
+    if (auto* input = samp::RefInputBox()) {
+        input->Send(msg);
+    }
+}
 
 static std::string formatString(const char* fmt, ...) {
     va_list args;
@@ -93,10 +92,10 @@ static std::vector<Mansion> g_mansions = {
   { "Особняк мафии №4",          2327.5828f, 1534.8408f,  11.3457f, "" }
 };
 
-
 static bool g_checkInProgress = false;
 static size_t g_currentMansionIndex = 0;
- void updateMansionController(const std::string& normalizedText) {
+
+void updateMansionController(const std::string& normalizedText) {
     size_t pos = normalizedText.find("Контролирует:");
     if (pos == std::string::npos) return;
 
@@ -128,45 +127,50 @@ static size_t g_currentMansionIndex = 0;
 
                 std::vector<char> tmp(tpCmd.begin(), tpCmd.end());
                 tmp.push_back('\0');
-                sampSendChat(tmp.data());
+                if (auto* input = samp::RefInputBox()) {
+                    input->Send(tmp.data());
+                }
             }
             break;
         }
     }
 }
 
- void cmd_startcheck() {
-     if (g_checkInProgress) {
-         samp::RefChat()->AddMessage(0xFFFFFFFF, "Проверка уже идёт.");
-         return;
-     }
-     g_checkInProgress = true;
-     g_currentMansionIndex = 0;
-     samp::RefChat()->AddMessage(0xFFFFFFFF, "Начинаем проверку особняков.");
-     if (!g_mansions.empty()) {
-         auto& m = g_mansions[g_currentMansionIndex];
-         std::string tpCmd = formatString("/pos %.4f %.4f %.4f", m.x, m.y, m.z);
-         std::vector<char> tmp(tpCmd.begin(), tpCmd.end());
-         tmp.push_back('\0');
-         sampSendChat(tmp.data());
-     }
- }
- void cmd_check_mansions_Controls() {
-     samp::RefChat()->AddMessage(0xFFFFFFFF, "=== Особняки ===");
+void cmd_startcheck() {
+    if (g_checkInProgress) {
+        samp::RefChat()->AddMessage(0xFFFFFFFF, "Проверка уже идёт.");
+        return;
+    }
+    g_checkInProgress = true;
+    g_currentMansionIndex = 0;
+    samp::RefChat()->AddMessage(0xFFFFFFFF, "Начинаем проверку особняков.");
+    if (!g_mansions.empty()) {
+        auto& m = g_mansions[g_currentMansionIndex];
+        std::string tpCmd = formatString("/pos %.4f %.4f %.4f", m.x, m.y, m.z);
+        std::vector<char> tmp(tpCmd.begin(), tpCmd.end());
+        tmp.push_back('\0');
+        if (auto* input = samp::RefInputBox()) {
+            input->Send(tmp.data());
+        }
+    }
+}
 
-     for (const auto& m : g_mansions) {
-         std::string msg;
+void cmd_check_mansions_Controls() {
+    samp::RefChat()->AddMessage(0xFFFFFFFF, "=== Особняки ===");
 
-         if (m.controller.empty())
-             msg = m.name + " -> ?";
-         else
-             msg = m.name + " -> " + m.controller;
+    for (const auto& m : g_mansions) {
+        std::string msg;
 
-         samp::RefChat()->AddMessage(0xFFAAAAFF, msg.c_str());
-     }
+        if (m.controller.empty())
+            msg = m.name + " -> ?";
+        else
+            msg = m.name + " -> " + m.controller;
 
-     samp::RefChat()->AddMessage(0xFFFFFFFF, "================");
- }
+        samp::RefChat()->AddMessage(0xFFAAAAFF, msg.c_str());
+    }
+
+    samp::RefChat()->AddMessage(0xFFFFFFFF, "================");
+}
 
 void Plugin::mainloop(const decltype(hookCTimerUpdate)& hook) {
     static bool inited = false;
@@ -187,7 +191,7 @@ void Plugin::mainloop(const decltype(hookCTimerUpdate)& hook) {
             HandleVehicleCommand(arg, "fixcar", "Использование /fix [ID игрока]");
             });
         samp::RefInputBox()->AddCommand("schecko", [](const char* arg) {
-            cmd_startcheck();  
+            cmd_startcheck();
             });
         samp::RefInputBox()->AddCommand("checko", [](const char* arg) {
             cmd_check_mansions_Controls();
