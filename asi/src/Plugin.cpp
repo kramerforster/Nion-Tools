@@ -116,7 +116,10 @@ static size_t g_currentMansionIndex = 0;
 
                 std::vector<char> tmp(tpCmd.begin(), tpCmd.end());
                 tmp.push_back('\0');
-                sampSendChat(tmp.data());
+                auto* input = samp::RefInputBox();
+                if (input) {
+                    input->Send(tmp.data());
+                }
             }
             break;
         }
