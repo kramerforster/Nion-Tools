@@ -33,10 +33,15 @@ void HandleVehicleCommand(const char* arg, const std::string& action, const std:
     uint16_t targetPlayerID = static_cast<uint16_t>(id);
     samp::CPlayerPool* pPlayerPool = samp::RefNetGame()->GetPlayerPool();
     samp::CRemotePlayer* pPlayer = pPlayerPool->GetPlayer(targetPlayerID);
-    if (!pPlayer || !pPlayer->DoesExist()) return samp::RefChat()->AddMessage(0xFFFFFFFF, "Игрок не в стриме.");
-
+    if (!pPlayer || !pPlayer->DoesExist()) {
+        samp::RefChat()->AddMessage(0xFFFFFFFF, "Игрок не в стриме.");
+        return;
+    }
     uint16_t vehicleId = pPlayer->m_nVehicleId;
-    if (vehicleId == 0) return samp::RefChat()->AddMessage(0xFFFFFFFF, "Игрок не находится в транспорте.");
+    if (vehicleId == 0) {
+        samp::RefChat()->AddMessage(0xFFFFFFFF, "Игрок не находится в транспорте.");
+        return;
+    }
     char msg[128];
     std::sprintf(msg, "/%s %u", action.c_str(), vehicleId);
     sampSendChat(msg);
@@ -73,7 +78,6 @@ struct Mansion {
     float x, y, z;
     std::string controller;
 };
-
 
 static std::string trim(const std::string& str) {
     size_t first = str.find_first_not_of(" ,");
@@ -167,8 +171,6 @@ static size_t g_currentMansionIndex = 0;
 void Plugin::mainloop(const decltype(hookCTimerUpdate)& hook) {
     static bool inited = false;
     if (!inited && samp::RefNetGame() != nullptr && samp::RefChat() != nullptr && rakhook::initialize()) {
-        samp::RefChat()->AddMessage(0xFFFFFFFF, "Plugin loaded");
-
         samp::RefInputBox()->AddCommand("spveh", [](const char* arg) {
             HandleVehicleCommand(arg, "spcar", "Использование /spveh [ID игрока]");
             });
