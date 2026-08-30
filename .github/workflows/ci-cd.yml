@@ -1,0 +1,95 @@
+name: Build
+
+on:
+  push:
+    tags:
+      - 'v*.*.*' 
+
+jobs:
+  build-asi:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: asi
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure CMake
+        shell: cmd
+        run: cmake -B build -A Win32 -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+
+      - name: Build ASI Plugin
+        shell: cmd
+        run: cmake --build build --config Release
+
+      - name: Upload ASI Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: asi-plugin
+          path: asi/build/bin/Release/AsiPlugin.asi
+  build-vite:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: js
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: js/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Frontend (Vite)
+        run: npm run build
+
+      - name: Upload Frontend Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NionTools
+          path: js/dist/
+
+  release:
+    needs: [build-asi, build-vite]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download ASI Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: asi-plugin
+          path: release-files/
+
+      - name: Download Frontend Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: NionTools
+          path: release-files/NionTools
+
+      - name: Zip Web UI
+        run: |
+          cd release-files/NionTools
+          zip -r ../NionTools.zip .
+          cd ../..
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release-files/AsiPlugin.asi
+            release-files/NionTools.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
