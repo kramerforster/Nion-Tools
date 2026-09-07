@@ -39,9 +39,7 @@ function goto(id) {
         };
         const timer = setTimeout(() => finish(false), 30000);
         const unsubscribe = InterfaceManager.registerInterfChat((args) => {
-            if (args[0].toLowerCase().includes("вы телепортировались к игроку")) {
-                finish(true);
-            }
+            if (args[0].toLowerCase().includes("вы телепортировались к игроку")) finish(true);
         });
         window.sendChatInput(`/goto ${id}`);
     });

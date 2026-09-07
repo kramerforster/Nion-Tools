@@ -5,8 +5,9 @@ import { scripts, Rest } from '../modules/index';
 
 export const load = {
     start() {
+        InterfaceManager.send(`Загружен скрипт. Версии: ${info.version}`)
         InterfaceManager.registerInterfaceListener("Loading", () => {
-            this.isActivated = false;
+            window.isActivated = false;
             this.unload();
             if (window.getInterfaceStatus("AdminSpectate")) window.closeInterface("AdminSpectate")
         });
@@ -34,7 +35,7 @@ export const load = {
                 info.auth = false;
             }
         });
-        if (window.App.$store.getters["player/isPlayerConnected"] && !this.isActivated) this.initTools();
+        if (window.App.$store.getters["player/isPlayerConnected"] && !window.isActivated) this.initTools();
         window.setPlayerConnectedStatus = new Proxy(window.setPlayerConnectedStatus, {
             apply: (target, thisArg, args) => {
                 if (args[0] === 1) this.initTools();
@@ -44,8 +45,8 @@ export const load = {
 
     },
     async initTools() {
-        if (info.isActivated) return;
-        this.isActivated = true;
+        if (window.isActivated) return;        
+        window.isActivated = true;
         info.local = { id: -1, name: "", score: 0, ping: 0 };
         info.nick = window.App.$store.getters["player/nickName"];
         info.server = window.App.$store.getters["player/serverId"];

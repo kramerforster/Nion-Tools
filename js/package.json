@@ -10,7 +10,5 @@
   "devDependencies": {
     "vite": "^5.0.0"
   },
-  "dependencies": {
-    "vue": "^3.5.41"
-  }
+  "dependencies": {}
 }
