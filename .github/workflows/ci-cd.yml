@@ -15,19 +15,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configure CMake
-        shell: cmd
-        run: cmake -B build -A Win32 -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
-
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v2
       - name: Build ASI Plugin
         shell: cmd
-        run: cmake --build build --config Release
-
+        run: msbuild NionTools.slnx /p:Configuration=Release /p:Platform=x86
+        
       - name: Upload ASI Artifact
         uses: actions/upload-artifact@v4
         with:
           name: asi-plugin
-          path: asi/build/bin/Release/AsiPlugin.asi
+          path: asi/Release/NionTools.asi
+
   build-vite:
     runs-on: ubuntu-latest
     defaults:
@@ -87,7 +86,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            release-files/AsiPlugin.asi
+            release-files/NionTools.asi
             release-files/NionTools.zip
           draft: false
           prerelease: false

@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="NionTools.vcxproj" Id="b6e777e6-e31a-45a9-ab6b-23a3814bc34e" />
+</Solution>
