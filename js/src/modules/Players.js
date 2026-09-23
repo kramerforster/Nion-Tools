@@ -6,6 +6,8 @@ function checkPlayerFilters(player) {
     if (!filters) return;
     const len = filters.length;
     if (!len) return;
+    const matchedFilters = [];
+
     for (let i = 0; i < len; i++) {
         const filter = filters[i];
         if (filter.enabled === false) continue;
@@ -15,6 +17,7 @@ function checkPlayerFilters(player) {
         const b = String(filter.value).toLowerCase();
         const op = filter.operator || filter.op;
         let isMatch = false;
+
         switch (op) {
             case '=':
                 isMatch = (a === b);
@@ -35,16 +38,18 @@ function checkPlayerFilters(player) {
                 isMatch = (Number(raw) <= Number(filter.value));
                 break;
         }
-        if (isMatch) {
-            const iconid = info.icons.find(icon => icon.title === "sp").id;
-            const button = (iconid !== undefined && iconid !== null) ? ` {btn:${iconid}:1001:${player.id}}` : '';
-            InterfaceManager.send(`Фильтр [${filter.param} ${op} ${filter.value}]: {FFCD00}${player.name}{FFFFFF} (id: ${player.id}, Клиент: ${player.mobile == 1 ? 'HASSLE' : 'RADMIR'})${button}`);
-        }
 
+        if (isMatch) matchedFilters.push(`${filter.param} ${op} ${filter.value}`);
+    }
+
+    if (matchedFilters.length > 0) {
+        const iconid = info.icons.find(icon => icon.title === "sp")?.id;
+        const button = (iconid !== undefined && iconid !== null) ? ` {btn:${iconid}:1001:${player.id}}` : '';
+        InterfaceManager.send(`Фильтр [${matchedFilters.join(', ')}]: {FFCD00}${player.name}{FFFFFF} (id: ${player.id}, Клиент: ${player.mobile == 1 ? 'HASSLE' : 'RADMIR'})${button}`);
     }
 }
+
 export function initPlayers() {
-    let incomingIds = new Set();
     window.onUpdatePlayersList = new Proxy(window.onUpdatePlayersList, {
         apply: (target, thisArg, args) => {
             const result = Reflect.apply(target, thisArg, args);
@@ -58,9 +63,9 @@ export function initPlayers() {
                 ping: local.ping,
             };
 
-            incomingIds.clear();
             const players = data.players;
             const cache = info.players;
+            const incomingIds = new Set();
             for (let i = 0; i < players.length; i++) {
                 const newPlayer = players[i];
                 incomingIds.add(newPlayer.id);

@@ -23,14 +23,14 @@ export const load = {
                 const match = accounts.find(a => a.name === name && a.serverId === serverId);
                 if (match && match.pass) {
                     InterfaceManager.createDialog(0, "AutoLogin", "", "Да", "Нет", "Автоматический вход для " + name, () => {
-                        window.sendClientEvent(gm.EVENT_EXECUTE_PUBLIC, "OnAuthorizationStart", match.pass);
+                        window.sendClientEvent(0, "OnAuthorizationStart", match.pass);
                     });
                 }
             };
             xhr.send();
         });
         InterfaceManager.registerInterfChat((args) => {
-            if (args[0].includes('Подключились. Присоединение к игре...')) {
+            if (args[0].includes('Подключение к')) {
                 info.isPlayersFirstUpdate = true;
                 info.auth = false;
             }
@@ -45,7 +45,7 @@ export const load = {
 
     },
     async initTools() {
-        if (window.isActivated) return;        
+        if (window.isActivated) return;
         window.isActivated = true;
         info.local = { id: -1, name: "", score: 0, ping: 0 };
         info.nick = window.App.$store.getters["player/nickName"];
@@ -84,10 +84,11 @@ export const load = {
                 }));
             }
         }
+        if (auth.data.admin.report) info.report.mode = auth.data.admin.report.mode;
         if (!info.aspawnrecovery && info.aspawn.x && info.aspawn.y && info.aspawn.z) window.sendChatInput(`/pos ${info.aspawn.x},${info.aspawn.y},${info.aspawn.z},${info.aspawn.interior}`);
         info.aspawnrecovery = false;
         this.load();
-        if (auth.data.admin.version !== info.version) return InterfaceManager.createDialog(0, "Обновление", "", "Ок", "", `У вас устаревшая версия (${info.version}). Актуальная версия: ${auth.data.admin.version}. Вы можете скачать обновление: {https://github.com/kramerforster/Nion-Tools|Скачать обновление|#38afec}`)
+        if (auth.data.admin.version !== info.version) return InterfaceManager.createDialog(0, "Обновление", "", "Ок", "", `У вас устаревшая версия (${info.version}). Актуальная версия: ${auth.data.admin.version}. Вы можете скачать обновление: {https://github.com/kramerforster/Nion-Tools/releases/download/v${info.version}/NionTools.zip|Скачать обновление|#38afec}`)
     },
     load() {
         if (!info.i) {

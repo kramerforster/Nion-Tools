@@ -70,7 +70,6 @@ export const InterfaceManager = {
             el.style.justifyContent = "center";
             el.style.userSelect = "none";
             el.style.transition = "all 0.15s ease";
-            el.style.cursor = "pointer";
             el.style.background = "rgba(255, 255, 255, 0.05)";
             el.style.color = "#b0b0b0";
             el.style.boxShadow = "inset 0 0.74vh 1.11vh 0 rgba(255, 255, 255, 0.03)";
@@ -127,10 +126,10 @@ export const InterfaceManager = {
             const row = document.createElement('div');
             row.style.display = "flex";
             row.style.flexDirection = "row";
-            row.style.gap = '0.46vh';
             row.style.width = "100%";
             row.style.boxSizing = "border-box";
             row.style.flex = "0 0 auto";
+            row.style.marginBottom = "0.46vh";
             return row;
         };
 
@@ -148,13 +147,13 @@ export const InterfaceManager = {
             el.style.opacity = "0";
             el.style.pointerEvents = "none";
             el.style.flex = "0 0 auto";
+            el.style.marginRight = "0.46vh";
             return el;
         };
 
         const applyBlockStyle = (block) => {
             block.style.display = "flex";
             block.style.flexDirection = "column";
-            block.style.gap = '0.46vh';
             block.style.flex = "0 0 auto";
             block.style.width = "auto";
             block.style.minWidth = "max-content";
@@ -179,7 +178,6 @@ export const InterfaceManager = {
         const container = document.createElement('div');
         container.style.display = "flex";
         container.style.flexDirection = "column";
-        container.style.gap = "1.48vh";
         container.style.width = "max-content";
         container.style.minWidth = "max-content";
         container.style.height = "auto";
@@ -189,7 +187,6 @@ export const InterfaceManager = {
 
         const keyboard = document.createElement('div');
         keyboard.style.display = "flex";
-        keyboard.style.gap = "1.39vh";
         keyboard.style.background = "rgba(20, 20, 20, 0.98)";
         keyboard.style.border = "0.14vh solid rgba(255, 255, 255, 0.1)";
         keyboard.style.borderRadius = "0.74vh";
@@ -199,7 +196,6 @@ export const InterfaceManager = {
         keyboard.style.alignItems = "flex-start";
         keyboard.style.width = "max-content";
         keyboard.style.minWidth = "max-content";
-        keyboard.style.flexShrink = "0";
 
         const mainBlock = document.createElement('div');
         applyBlockStyle(mainBlock);
@@ -297,13 +293,18 @@ export const InterfaceManager = {
 
         mainRows.forEach(rowDef => {
             const row = makeRow();
-            rowDef.forEach(item => {
+            rowDef.forEach((item, index) => {
                 if (item === 'gap') {
-                    row.appendChild(makeGap());
+                    const gapEl = makeGap();
+                    gapEl.style.marginRight = "0.46vh";
+                    row.appendChild(gapEl);
                     return;
                 }
                 const [code, label, width] = item;
                 const el = makeKey(code, label, width);
+
+                if (index < rowDef.length - 1) el.style.marginRight = "0.46vh";
+
                 keyElements[code] = el;
                 row.appendChild(el);
             });
@@ -337,13 +338,18 @@ export const InterfaceManager = {
 
         navRows.forEach(rowDef => {
             const row = makeRow();
-            rowDef.forEach(item => {
+            rowDef.forEach((item, index) => {
                 if (item === null) {
                     row.appendChild(makeInvisible());
                     return;
                 }
                 const [code, label] = item;
                 const el = makeKey(code, label, '3.7vh');
+
+                if (index < rowDef.length - 1) {
+                    el.style.marginRight = "0.46vh";
+                }
+
                 keyElements[code] = el;
                 row.appendChild(el);
             });
@@ -395,10 +401,10 @@ export const InterfaceManager = {
 
         const actions = document.createElement('div');
         actions.style.display = "flex";
-        actions.style.gap = "0.74vh";
         actions.style.alignSelf = "flex-start";
         actions.style.boxSizing = "border-box";
         actions.style.flex = "0 0 auto";
+        actions.style.marginTop = "1.48vh";
 
         const applyCancelBtnStyle = (btn) => {
             btn.style.padding = "0.93vh 2.22vh";
@@ -407,7 +413,6 @@ export const InterfaceManager = {
             btn.style.fontFamily = "'Open Sans', sans-serif";
             btn.style.border = "0.14vh solid rgba(255, 255, 255, 0.1)";
             btn.style.borderRadius = "0.37vh";
-            btn.style.cursor = "pointer";
             btn.style.transition = "opacity 0.2s, transform 0.1s";
             btn.style.boxSizing = "border-box";
             btn.style.outline = "none";
@@ -425,11 +430,9 @@ export const InterfaceManager = {
             btn.style.fontFamily = "'Open Sans', sans-serif";
             btn.style.border = "none";
             btn.style.borderRadius = "0.37vh";
-            btn.style.cursor = "pointer";
             btn.style.transition = "opacity 0.2s, transform 0.1s";
             btn.style.boxSizing = "border-box";
             btn.style.outline = "none";
-            btn.style.flex = "0 0 auto";
             btn.style.background = "#f9b701";
             btn.style.color = "#141414";
             btn.style.opacity = "1";
@@ -455,6 +458,7 @@ export const InterfaceManager = {
         const saveBtn = document.createElement('button');
         saveBtn.textContent = 'Сохранить';
         setupButtonListeners(saveBtn, applySaveBtnStyle);
+        saveBtn.style.marginRight = "0.74vh";
 
         const cancelBtn = document.createElement('button');
         cancelBtn.textContent = 'Отмена';
@@ -589,7 +593,7 @@ export const InterfaceManager = {
         };
     },
     closeDialog() {
-        window.sendClientEvent(0, "OnDialogResponse", 0, 1, -1, "");
+        window.sendClientEvent(0, { ignoreChat: true }, "OnDialogResponse", 0, 1, -1, "");
         window.closeLastDialog();
     },
     send(text) {
@@ -599,16 +603,16 @@ export const InterfaceManager = {
         if (Array.isArray(val)) return val.map(v => this.parseCopyTags(v));
         return typeof val === 'string' ? val.replace(/\{copy:([^\|\}]+)\}/g, '{copy:$1|$1|3b82f6}') : val;
     },
-    createDialog(e = 0, t = "Title", i = "Subtitle", s = "Выбрать", n = "Закрыть", o = "Text", a = () => {}, l = () => {}) {
-        if (window.addDialogInQueue) this.closeDialog();
-        o = this.parseCopyTags(o);
+    createDialog(dialogType = 0, title = "Заглавие", subtitle = "Подзаголовок", acceptButton = "Выбрать", rejectButton = "Закрыть", content = "Text",  onAccept = () => {}, onReject = () => {}) {
+        if (window.IsDialogOpened()) this.closeDialog();
+        content = this.parseCopyTags(content);
         if (!this.originals.sendClientEvent) {
             this.originals.sendClientEvent = window.sendClientEvent;
             this.originals.addDialogInQueue = window.addDialogInQueue;
             window.sendClientEvent = new Proxy(window.sendClientEvent, {
                 apply: (target, self, args) => {
                     if (!window.isFakeDialog) return Reflect.apply(target, self, args);
-
+                    
                     const isResponse = args.includes("OnDialogResponse");
                     if (isResponse || args.includes("OnMultiDialogClickNavigButton")) {
                         if (this.originals.sendClientEvent) {
@@ -619,21 +623,24 @@ export const InterfaceManager = {
                             window.addDialogInQueue = this.originals.addDialogInQueue;
                             this.originals.addDialogInQueue = null;
                         }
+                        
                         window.isFakeDialog = false;
+                        
                         if (isResponse) {
                             setTimeout(() => {
-                                args[3] === 1 ? a(args[5].replace(/<[^>]*>|HLDialog/g, "")) : l();
+                                args[3] === 1 ? onAccept(args[5].replace(/<[^>]*>|HLDialog/g, "")) : onReject();
                             }, 16);
                             this.dialogIndex = undefined;
                         } else {
                             this.dialogIndex += (args[2] === 1 ? 1 : -1);
-                            setTimeout(() => this.createDialog(e, t, i, s, n, o, a, l), 64);
+                            setTimeout(() => this.createDialog(dialogType, title, subtitle, acceptButton, rejectButton, content, onAccept, onReject), 64);
                         }
                         return false;
                     }
                     return Reflect.apply(target, self, args);
                 }
             });
+            
             window.addDialogInQueue = new Proxy(window.addDialogInQueue, {
                 apply: (target, self, args) => {
                     window.isFakeDialog = args[1].includes("HLDialog");
@@ -641,24 +648,23 @@ export const InterfaceManager = {
                     return Reflect.apply(target, self, args);
                 }
             });
-
         }
-        const isArray = Array.isArray(o);
+        const isArray = Array.isArray(content);
         this.dialogIndex = isArray ? (this.dialogIndex ?? 0) : 0;
-        const navButtons = isArray ? [+(this.dialogIndex > 0), +(this.dialogIndex < o.length - 1)] : [0, 0];
-        window.addDialogInQueue(`[0,${e},"${t}","${i}","${s}","${n}",${navButtons[0]},${navButtons[1]}]`, "HLDialog" + (isArray ? o[this.dialogIndex] : o), 0);
+        const navButtons = isArray ? [+(this.dialogIndex > 0), +(this.dialogIndex < content.length - 1)] : [0, 0];
+        window.addDialogInQueue(`[0,${dialogType},"${title}","${subtitle}","${acceptButton}","${rejectButton}",${navButtons[0]},${navButtons[1]}]`, "HLDialog" + (isArray ? content[this.dialogIndex] : content), 0);
     },
-    init() {
+    init() { 
         const chat = window.interface("Hud").$refs.chat;
         const originalAssign = Object.assign;
         Object.assign = (target, ...sources) => {
-            const result = originalAssign.apply(this, [target, ...sources]);
+            const result = originalAssign(target, ...sources);
             if (target && target['/src/assets/images/hud/chat/message-icons/0.svg']) {
                 const ids = Object.keys(target).filter(key => key.startsWith('/src/assets/images/hud/chat/message-icons/')).map(key => parseInt(key.split('/').pop(), 10));
+                let nextId = ids.length > 0 ? Math.max(...ids) : 3;
                 info.icons.forEach(item => {
                     if (item.id === undefined) {
-                        const maxId = ids.length > 0 ? Math.max(...ids) : 3;
-                        item.id = maxId + 1;
+                        item.id = ++nextId;
                     }
                     target[`/src/assets/images/hud/chat/message-icons/${item.id}.svg`] = item.icon;
                 });
@@ -666,15 +672,15 @@ export const InterfaceManager = {
 
             return result;
         };
-    if (chat.images) {
+        if (chat.images) {
             const ids = Object.keys(chat.images).filter(key => key.startsWith('/src/assets/images/hud/chat/message-icons/')).map(key => parseInt(key.split('/').pop(), 10));
-                info.icons.forEach(item => {
-                    if (item.id === undefined) {
-                        const maxId = ids.length > 0 ? Math.max(...ids) : 3;
-                        item.id = maxId + 1;
-                    }
-                    chat.images[`/src/assets/images/hud/chat/message-icons/${item.id}.svg`] = item.icon;
-                });
+            let nextId = ids.length > 0 ? Math.max(...ids) : 3;
+            info.icons.forEach(item => {
+                if (item.id === undefined) {
+                    item.id = ++nextId;
+                }
+                chat.images[`/src/assets/images/hud/chat/message-icons/${item.id}.svg`] = item.icon;
+            });
         }
         window.onChatMessageAction = new Proxy(window.onChatMessageAction, {
             apply: (target, thisArg, args) => {
@@ -699,7 +705,7 @@ export const InterfaceManager = {
             apply: (target, thisArg, args) => {
                 if (args[1] === "OnDialogResponse" && args[3] == 1) {
                     const dialog = window.currentDialog();
-                    if (dialog ?.title ?.toLowerCase().includes("восстановление позици")) info.aspawnrecovery = true;
+                    if (dialog.title.toLowerCase().includes("восстановление позици")) info.aspawnrecovery = true;
                 }
                 return Reflect.apply(target, thisArg, args);
             }

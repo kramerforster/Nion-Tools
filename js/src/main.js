@@ -2,7 +2,7 @@ import { InterfaceManager } from './core/InterfaceManager';
 import { load } from './core/Loader';
 
 if (window.isActivated === undefined) {
-    window.isActivated = false; 
+    window.isActivated = false;
     InterfaceManager.executeFunctionWhen(() => {
         InterfaceManager.init();
         load.start();

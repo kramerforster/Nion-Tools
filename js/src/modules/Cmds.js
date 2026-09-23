@@ -9,7 +9,7 @@ export function initCmds() {
 
     InterfaceManager.registerCommand("/tpr", async(params) => {
         const id = params[0];
-        if (window.getInterfaceStatus && window.getInterfaceStatus("AdminSpectate")) {
+        if (window.getInterfaceStatus("AdminSpectate")) {
             const tp = await functions.goto(window.interface("AdminSpectate").player.id);
             if (!tp) return InterfaceManager.send("Функция goto не дождалась ответа");
         }
@@ -44,7 +44,15 @@ export function initCmds() {
                     if (distance < 3) {
                         unsubscribe();
                         clearTimeout(timeoutId);
-                        setTimeout(() => window.sendChatInput(`/tpcar ${id}`), 100);
+                        setTimeout(() => {
+                            let carHp = 0;
+                            if (window.getInterfaceStatus("AdminSpectate")) carHp = window.interface("AdminSpectate").player.carHp;
+                            if (carHp <= 0) {
+                                window.sendChatInput(`/gethere ${id}`);
+                            } else {
+                                window.sendChatInput(`/tpcar ${id}`);
+                            }
+                        }, 100);
                         resolve();
                     }
                 }
@@ -97,7 +105,6 @@ export function initCmds() {
         header.style.justifyContent = "space-between";
         header.style.alignItems = "center";
         header.style.marginBottom = "20px";
-        header.style.flex = "0 0 auto";
 
         const title = document.createElement("span");
         title.textContent = "Выдача оффлайн форм";
@@ -117,7 +124,6 @@ export function initCmds() {
         closeBtn.style.background = "none";
         closeBtn.style.border = "none";
         closeBtn.style.color = "#fff6";
-        closeBtn.style.cursor = "pointer";
         closeBtn.style.fontSize = "20px";
         closeBtn.style.fontWeight = "700";
         closeBtn.style.transition = "color 0.25s ease";
@@ -151,7 +157,6 @@ export function initCmds() {
             btn.style.background = "none";
             btn.style.border = "none";
             btn.style.color = color;
-            btn.style.cursor = "pointer";
             btn.style.fontSize = "13px";
             btn.style.fontWeight = "700";
             btn.style.lineHeight = "1";
@@ -172,10 +177,7 @@ export function initCmds() {
 
         function renderList() {
             listWrap.innerHTML = "";
-            if (!lines.length) {
-                listWrap.appendChild(emptyHint);
-                return;
-            }
+            if (!lines.length) return listWrap.appendChild(emptyHint);
             lines.forEach((line, idx) => {
                 const delayMatch = line.match(/^\{sl\s*(\d+)?\}$/i);
                 const row = document.createElement("div");
@@ -462,7 +464,6 @@ export function initCmds() {
             b.style.border = `1px solid ${borderColor}`;
             b.style.borderRadius = "6px";
             b.style.padding = "14px 26px";
-            b.style.cursor = "pointer";
             b.style.fontSize = "15px";
             b.style.fontWeight = "700";
             b.style.color = textColor;
@@ -735,7 +736,6 @@ export function initCmds() {
             btns.forEach(b => {
                 b.disabled = false;
                 b.style.opacity = "1";
-                b.style.cursor = "pointer";
             });
             lineInput.readOnly = false;
             lineInput.style.opacity = "1";
@@ -782,7 +782,6 @@ export function initCmds() {
             ];
             InterfaceManager.createDialog(2, "Nion Tools", "", "Выбрать", "Закрыть", items.map(i => i.text).join("<n>"), async(selected) => {
                     let item = items.find(i => selected === i.text);
-                    if (!item) return;
                     if (item.name === "scripts") openScripts();
                     else if (item.name === "settings") openSettingsScripts();
                     else if (item.name === "aspawn") openAspawn();
@@ -799,7 +798,6 @@ export function initCmds() {
             });
             InterfaceManager.createDialog(2, "Скрипты", "Список скриптов", "Выбрать", "Назад", scriptItems.map(i => i.text).join("<n>"), async(selectedScript) => {
                     let sItem = scriptItems.find(i => selectedScript.endsWith(" " + i.name));
-                    if (!sItem) return menu();
                     let script = scripts[sItem.name];
                     script.toggle(!script.data.enabled);
                     let disabledList = Object.entries(scripts).filter(([n, s]) => s.data.enabled === false).map(([n]) => n);
@@ -820,7 +818,8 @@ export function initCmds() {
                 { name: "Abind", text: "Настройки автовыдачи форм" },
                 { name: "Tp", text: "Клавиша телепорта" },
                 { name: "SpecTP", text: "Клавиша телепорта из сп" },
-                { name: "JoinFilters", text: "Фильтры входа игроков" }
+                { name: "JoinFilters", text: "Фильтры входа игроков" },
+                { name: "Report", text: "Настройки репортов" }
             ];
             InterfaceManager.createDialog(2, "Настройки скриптов", "", "Выбрать", "Назад", items.map(i => i.text).join("<n>"), async(selected) => {
                     let item = items.find(i => selected === i.text);
@@ -832,6 +831,7 @@ export function initCmds() {
                     else if (item.name === "Tp") openTpSettings();
                     else if (item.name === "SpecTP") openSpecTpSettings();
                     else if (item.name === "JoinFilters") openJoinFilters();
+                    else if (item.name === "Report") openReportSettings();
                 },
                 () => menu());
         };
@@ -853,8 +853,6 @@ export function initCmds() {
 
             InterfaceManager.createDialog(2, "Фильтры входа", "Оповещение в чат при входе игроков", "Выбрать", "Назад", filterItems.map(i => i.text).join("<n>"), async(selected) => {
                     let fItem = filterItems.find(i => selected === i.name || selected.endsWith(i.name));
-                    if (!fItem) return openSettingsScripts();
-
                     if (fItem.id === -1) {
                         openAddFilter();
                     } else {
@@ -927,7 +925,6 @@ export function initCmds() {
 
         let openFilterActions = (id) => {
             let filter = info.joinFilters[id];
-            if (!filter) return openJoinFilters();
             let actions = [
                 { name: "toggle", text: `${filter.enabled !== false ? "Выключить" : "Включить"}` },
                 { name: "delete", text: "Удалить фильтр" }
@@ -1017,7 +1014,6 @@ export function initCmds() {
             });
             InterfaceManager.createDialog(2, "Спектейт-панель", "Кнопки", "Выбрать", "Назад", buttonItems.map(i => i.text).join("<n>"), async(selectedButton) => {
                     let bItem = buttonItems.find(i => selectedButton.endsWith(" " + i.name));
-                    if (!bItem) return openSettingsScripts();
                     let btn = info.spButtons.find(b => b.id === bItem.id);
                     btn.disabled = !btn.disabled;
                     let disabledIds = info.spButtons.filter(b => b.disabled).map(b => b.id);
@@ -1028,7 +1024,22 @@ export function initCmds() {
                 },
                 () => openSettingsScripts());
         };
-
+        let openReportSettings = () => {
+            let subItems = [
+                { name: "mode", label: "Сменить режим", text: `${info.report.mode === 1 ? "{66CC00}[Скрытие]" : "{FFCD00}[Подсветка]"} {FFFFFF}Сменить режим` }
+            ];
+            InterfaceManager.createDialog(2, "Настройки репортов", "", "Выбрать", "Назад", subItems.map(i => i.text).join("<n>"), async(selectedSub) => {
+                    let subItem = subItems.find(i => selectedSub.endsWith(i.label));
+                    if (subItem.name === "mode") {
+                        info.report.mode = info.report.mode === 1 ? 0 : 1;
+                        let data = { nick: info.nick, sid: info.server, report: info.report };
+                        await ApiService.sendPost(`${info.hosts[info.hostIndex]}/set_settings`, data);
+                        InterfaceManager.send("Режим репортов установлен");
+                        openReportSettings();
+                    }
+                },
+                () => openSettingsScripts());
+        };
         let openAbindSettings = () => {
             let subItems = [
                 { name: "batchSize", text: "Размер пачки" },
@@ -1038,7 +1049,6 @@ export function initCmds() {
             ];
             InterfaceManager.createDialog(2, "Настройки автовыдачи форм", "", "Выбрать", "Назад", subItems.map(i => i.text).join("<n>"), async(selectedSub) => {
                     let subItem = subItems.find(i => selectedSub === i.text);
-                    if (!subItem) return openSettingsScripts();
                     if (subItem.name === "batchSize") openBatchSize();
                     else if (subItem.name === "delay") openDelay();
                     else if (subItem.name === "order") openOrderList();
@@ -1149,7 +1159,6 @@ export function initCmds() {
 
         let openOrderActions = (groupId) => {
             let group = info.abindGroup.order.find(o => o.id === groupId);
-            if (!group) return openOrderList();
             let actions = [
                 { name: "toggle", label: "Вкл/Выкл", text: `${group.enabled ? "{66CC00}[ON]" : "{FF5555}[OFF]"} {FFFFFF}Вкл/Выкл` },
                 { name: "checkOnline", label: "Проверка онлайна", text: `${group.checkOnline ? "{66CC00}[ON]" : "{FF5555}[OFF]"} {FFFFFF}Проверка онлайна` },
@@ -1186,7 +1195,6 @@ export function initCmds() {
 
         let openAliasList = (groupId) => {
             let group = info.abindGroup.order.find(o => o.id === groupId);
-            if (!group) return openOrderList();
             let aliasItems = group.aliases.map(a => {
                 return { name: a, isAdd: false, text: `{FFFFFF}${a}` };
             });
@@ -1217,7 +1225,6 @@ export function initCmds() {
 
         let openAddAlias = (groupId) => {
             let group = info.abindGroup.order.find(o => o.id === groupId);
-            if (!group) return openOrderList();
             InterfaceManager.createDialog(1, "Новый алиас", "Введите команду", "Добавить", "Назад", "", async(value) => {
                     let alias = value.trim();
                     const aliasRegex = /^\/[a-zA-Z0-9_]+$/;
@@ -1247,7 +1254,6 @@ export function initCmds() {
             ];
             InterfaceManager.createDialog(2, "Настройки спавна", "", "Выбрать", "Назад", subItems.map(i => i.text).join("<n>"), async(selectedAspawn) => {
                     let subItem = subItems.find(i => selectedAspawn === i.text);
-                    if (!subItem) return menu();
                     if (subItem.name === "set") {
                         const pPos = window.App.$store.getters["player/position"];
                         let data = { nick: info.nick, sid: info.server, aspawn_x: pPos.x, aspawn_y: pPos.y, aspawn_z: pPos.z, aspawn_interior: pPos.interior };
@@ -1286,127 +1292,143 @@ export function initCmds() {
             return InterfaceManager.send("Проверка принудительно остановлена");
         }
         InterfaceManager.isChecking = true;
+
+        const unregisterDialog = InterfaceManager.registerDialog(["Присоединиться к семье?", "семьи в игре"], () => {
+            if (!InterfaceManager.isChecking) return;
+            window.sendClientEvent(0, { ignoreChat: true }, "OnDialogResponse", 0, 1, 1, `Nion Tools`);
+            setTimeout(() => {
+                const dialog = window.currentDialog();
+                if (dialog && ["присоединиться к семье?", "семьи в игре"].some(p => dialog.title.toLowerCase().includes(p))) {
+                    window.closeLastDialog();
+                }
+            }, 100);
+        });
+
+        const cleanup = () => {
+            InterfaceManager.isChecking = false;
+            unregisterDialog();
+        };
         window.sendChatInput(`/phone`);
         window.sendChatInput(`/gangs`);
         let phoneTimeout;
-        const run = (callback, condition) => {
+        const phoneOpened = await new Promise(resolve => {
+            phoneTimeout = setTimeout(() => {
+                if (InterfaceManager.isChecking) {
+                    InterfaceManager.isChecking = false;
+                    unregisterDialog();
+                    InterfaceManager.send("Отмена телефон не открылся за 2 секунды");
+                    resolve(false);
+                }
+            }, 2000);
+
             InterfaceManager.executeFunctionWhen(() => {
-                if (!InterfaceManager.isChecking) return;
-                callback();
-            }, () => {
+                clearTimeout(phoneTimeout);
+                resolve(true);
+            }, () => !InterfaceManager.isChecking || !!window.interface("Phone"));
+        });
+
+        if (!phoneOpened || !InterfaceManager.isChecking) return;
+
+        const phone = window.interface("Phone");
+        phone.openApp(14);
+
+        await new Promise(resolve => {
+            InterfaceManager.executeFunctionWhen(resolve, () => {
                 if (!InterfaceManager.isChecking) return true;
-                return condition();
-            });
-        };
-        const unregisterDialog = InterfaceManager.registerDialog(["Присоединиться к семье?", "семьи в игре"], () => {
-            if (!InterfaceManager.isChecking) return;
-            window.sendClientEvent(gm.EVENT_EXECUTE_PUBLIC, "OnDialogResponse", 0, 1, 1, `Nion Tools`);
-            run(() => {
-                const title = window.currentDialog() ?.title ?.toLowerCase();
-                if (["присоединиться к семье?", "семьи в игре"].some(phrase => title.includes(phrase))) window.closeLastDialog();
-            }, () => {
-                return !!window.currentDialog();
+                return phone.getCurrentApp().currentPage.componentName === "MAIN";
             });
         });
 
-        phoneTimeout = setTimeout(() => {
-            if (InterfaceManager.isChecking) {
-                InterfaceManager.isChecking = false;
-                unregisterDialog();
-                InterfaceManager.send("Отмена телефон не открылся за 2 секунды");
-            }
-        }, 2000);
-        run(() => {
-            clearTimeout(phoneTimeout);
-            if (!InterfaceManager.isChecking) return;
-            window.interface("Phone").openApp(14);
-            run(() => {
-                const app = window.interface("Phone").getCurrentApp();
-                app.setCurrentPage("DISTRICTS_CONTROL");
-                run(async() => {
-                    if (!InterfaceManager.isChecking) return;
-                    const page = app.page();
-                    mansions.forEach(mansion => {
-                        const point = page.points.find(p => p.specialName && p.specialName.toUpperCase() === mansion.name.toUpperCase());
-                        if (point) {
-                            mansion.ownerId = point.ownerId;
-                            mansion.ownerName = point.ownerId >= 0 ? (point.ownerName || "Неизвестно") : "Свободен";
-                        }
-                    });
-                    for (const mansion of mansions) {
-                        if (!InterfaceManager.isChecking) return;
-                        const owned = mansion.ownerId !== null && mansion.ownerId >= 0;
-                        if (!owned) continue;
-                        await new Promise(resolve => setTimeout(resolve, 1000));
-                        if (!InterfaceManager.isChecking) return;
-                        window.sendChatInput(`/gangs ${mansion.ownerId}`);
-                        const moved = await new Promise((resolve) => {
-                            let resolved = false;
-                            const unregisterChat = InterfaceManager.registerInterfChat((args) => {
-                                if (args[0].toLowerCase().includes("вы были временно перемещены в семью") && !resolved) {
-                                    resolved = true;
-                                    unregisterChat();
-                                    resolve(true);
-                                } else if (args[0].toLowerCase().includes("вы указали неверный id семьи") && !resolved) {
-                                    resolved = true;
-                                    unregisterChat();
-                                    resolve(false);
-                                }
-                            });
-                            setTimeout(() => {
-                                if (!resolved) {
-                                    resolved = true;
-                                    unregisterChat();
-                                    resolve(false);
-                                }
-                            }, 2000);
-                        });
-                        if (!moved) continue;
-                        if (!InterfaceManager.isChecking) return;
-                        mansion.founder = await new Promise((resolve) => {
-                            const gangsApp = window.interface("Phone").$refs.gangs;
-                            if (!gangsApp) return resolve(null);
-                            const origMain = gangsApp.setAsideStatsData;
-                            const boundOrigMain = origMain.bind(gangsApp);
-                            let resolved = false;
-                            gangsApp.setAsideStatsData = (s) => {
-                                boundOrigMain(s);
-                                if (!resolved) {
-                                    resolved = true;
-                                    gangsApp.setAsideStatsData = origMain;
-                                    const founder = gangsApp.DEFAULT_PAGES.MAIN.params.asideStatsData.founder;
-                                    resolve(founder);
-                                }
-                            };
-                            window.sendClientEvent(gm.EVENT_EXECUTE_PUBLIC, "FAMTBL_OnPlayerOpenTab", 0);
-                        });
-                    }
-                    if (!InterfaceManager.isChecking) return;
-                    InterfaceManager.isChecking = false;
-                    unregisterDialog();
-                    if (window.getInterfaceStatus("Phone")) window.sendChatInput(`/phone`);
-                    const lines = mansions.map(mansion => {
-                        if (mansion.ownerId !== null && mansion.ownerId >= 0) {
-                            return `${mansion.name}\nВладелец: {copy:${mansion.ownerName}} (ID: ${mansion.ownerId})\nОснователь: {copy:${mansion.founder || "не найден"}}`;
-                        } else {
-                            return `${mansion.name}\nСвободен`;
-                        }
-                    });
-                    const dialogText = lines.join("<n>");
-                    InterfaceManager.createDialog(0, "Результаты проверки", "", "Закрыть", "", dialogText)
-                }, () => {
-                    const page = app.page();
-                    if (!page || !Array.isArray(page.points)) return false;
-                    const specialNames = page.points.map(p => p.specialName ? p.specialName.toUpperCase() : "");
-                    return mansions.every(m => specialNames.includes(m.name.toUpperCase()));
-                });
-            }, () => {
-                const app = window.interface("Phone").getCurrentApp();
-                return !!app && !!app.currentPage && app.currentPage.componentName === "MAIN";
+        if (!InterfaceManager.isChecking) return cleanup();
+
+        const app = phone.getCurrentApp();
+        app.setCurrentPage("DISTRICTS_CONTROL");
+
+        await new Promise(resolve => {
+            InterfaceManager.executeFunctionWhen(resolve, () => {
+                if (!InterfaceManager.isChecking) return true;
+                const page = app.page();
+                if (page && Array.isArray(page.points)) {
+                    const names = page.points.map(p => p.specialName ? p.specialName.toUpperCase() : "");
+                    return mansions.every(m => names.includes(m.name.toUpperCase()));
+                }
+                return false;
             });
-        }, () => {
-            return !!window.interface("Phone");
         });
+
+        if (!InterfaceManager.isChecking) return cleanup();
+
+        const page = app.page();
+        mansions.forEach(mansion => {
+            const point = page.points.find(p => p.specialName && p.specialName.toUpperCase() === mansion.name.toUpperCase());
+            if (point) {
+                mansion.ownerId = point.ownerId;
+                mansion.ownerName = point.ownerId >= 0 ? (point.ownerName || "Неизвестно") : "Свободен";
+            }
+        });
+
+        for (let i = 0; i < mansions.length; i++) {
+            if (!InterfaceManager.isChecking) break;
+            const mansion = mansions[i];
+            if (mansion.ownerId === null || mansion.ownerId < 0) continue;
+            await new Promise(r => setTimeout(r, 1000));
+            if (!InterfaceManager.isChecking) break;
+
+            window.sendChatInput(`/gangs ${mansion.ownerId}`);
+
+            const moved = await new Promise((resolve) => {
+                let resolved = false;
+                const unregisterChat = InterfaceManager.registerInterfChat((args) => {
+                    if (resolved) return;
+                    const text = args[0].toLowerCase();
+                    if (text.includes("вы были временно перемещены в семью")) {
+                        resolved = true;
+                        unregisterChat();
+                        resolve(true);
+                    } else if (text.includes("вы указали неверный id семьи")) {
+                        resolved = true;
+                        unregisterChat();
+                        resolve(false);
+                    }
+                });
+
+                setTimeout(() => {
+                    if (!resolved) {
+                        resolved = true;
+                        unregisterChat();
+                        resolve(false);
+                    }
+                }, 2000);
+            });
+
+            if (!moved || !InterfaceManager.isChecking) continue;
+
+            mansion.founder = await new Promise((resolve) => {
+                const gangsApp = phone.$refs.gangs;
+                if (!gangsApp) return resolve(null);
+
+                const origMain = gangsApp.setAsideStatsData;
+                let resolved = false;
+
+                gangsApp.setAsideStatsData = (s) => {
+                    origMain.call(gangsApp, s);
+                    if (!resolved) {
+                        resolved = true;
+                        gangsApp.setAsideStatsData = origMain;
+                        resolve(gangsApp.DEFAULT_PAGES.MAIN.params.asideStatsData.founder);
+                    }
+                };
+
+                window.sendClientEvent(0, { ignoreChat: true }, "FAMTBL_OnPlayerOpenTab", 0);
+            });
+        }
+        cleanup();
+        if (window.getInterfaceStatus("Phone")) window.sendChatInput(`/phone`);
+
+        const resultText = mansions.map(m => {
+            return (m.ownerId !== null && m.ownerId >= 0) ? `${m.name}<n>Владелец: {copy:${m.ownerName}} (ID: ${m.ownerId})<n>Основатель: {copy:${m.founder || "не найден"}}` : `${m.name}<n>Свободен`;
+        }).join("<n");
+        InterfaceManager.createDialog(0, "Результаты проверки", "", "Закрыть", "", resultText);
     }, true);
 
     InterfaceManager.registerCommand("/atp", () => {
@@ -1414,7 +1436,6 @@ export function initCmds() {
         if (window.getInterfaceStatus("AdminSpectate")) return InterfaceManager.send(`Телепортация в режиме наблюдателя недоступна.`);
         window.sendChatInput(`/${window.interface("Hud").speedometer.show ? "vehpos" : "pos"} ${info.aspawn.x},${info.aspawn.y},${info.aspawn.z},${info.aspawn.interior},0`);
     }, true);
-
 
     InterfaceManager.registerCommand("/index", () => {
         if (!Report.data.reports.length) return InterfaceManager.send(`Нет данных для анализа.`);
