@@ -6,21 +6,26 @@ import { Report } from './Report';
 import { functions } from './functions';
 
 export function initCmds() {
-
     InterfaceManager.registerCommand("/tpr", async(params) => {
         const id = params[0];
+        let carHp = 0;
+
         if (window.getInterfaceStatus("AdminSpectate")) {
+            carHp = window.interface("AdminSpectate").player.carHp;
             const tp = await functions.goto(window.interface("AdminSpectate").player.id);
             if (!tp) return InterfaceManager.send("Функция goto не дождалась ответа");
         }
+
         const pPos = window.App.$store.getters["player/position"];
         window.discardRoute();
+
         const points = await new Promise((resolve) => {
             const timer = setTimeout(() => {
                 engine.off("NavigationPathUpdated", handler);
                 InterfaceManager.send("Функция getNavigationPath не дождалась ответа");
                 resolve(null);
             }, 5000);
+
             const handler = (e) => {
                 clearTimeout(timer);
                 engine.off("NavigationPathUpdated", handler);
@@ -32,27 +37,34 @@ export function initCmds() {
         if (!points) return window.discardRoute();
         const last = points[points.length - 1];
         window.sendChatInput("/" + (window.interface("Hud").speedometer.show ? "vehpos" : "pos") + " " + last.join(",") + ",0");
+
         if (!id) return window.discardRoute();
+
         await new Promise((resolve) => {
             const timeoutId = setTimeout(() => {
                 unsubscribe();
                 resolve();
             }, 20000);
+
             var unsubscribe = window.App.$store.subscribe((mutation, state) => {
                 if (mutation.type === "player/setPosition") {
-                    const distance = Math.hypot(state.player.position.x - last[0], state.player.position.y - last[1]);
+                    const distance = Math.hypot(
+                        state.player.position.x - last[0],
+                        state.player.position.y - last[1]
+                    );
+
                     if (distance < 3) {
                         unsubscribe();
                         clearTimeout(timeoutId);
+
                         setTimeout(() => {
-                            let carHp = 0;
-                            if (window.getInterfaceStatus("AdminSpectate")) carHp = window.interface("AdminSpectate").player.carHp;
                             if (carHp <= 0) {
                                 window.sendChatInput(`/gethere ${id}`);
                             } else {
                                 window.sendChatInput(`/tpcar ${id}`);
                             }
                         }, 100);
+
                         resolve();
                     }
                 }
@@ -60,7 +72,7 @@ export function initCmds() {
         });
 
         window.discardRoute();
-    });
+    }, true);
 
     InterfaceManager.registerCommand("/abind", ({ formsData = [], findLog = [] } = {}) => {
         let container = document.getElementById("abind");
