@@ -62,7 +62,6 @@ export function initCmds() {
         window.discardRoute();
     });
 
-
     InterfaceManager.registerCommand("/abind", ({ formsData = [], findLog = [] } = {}) => {
         let container = document.getElementById("abind");
         if (container) {

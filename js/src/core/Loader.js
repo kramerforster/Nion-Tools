@@ -88,7 +88,7 @@ export const load = {
         if (!info.aspawnrecovery && info.aspawn.x && info.aspawn.y && info.aspawn.z) window.sendChatInput(`/pos ${info.aspawn.x},${info.aspawn.y},${info.aspawn.z},${info.aspawn.interior}`);
         info.aspawnrecovery = false;
         this.load();
-        if (auth.data.admin.version !== info.version) return InterfaceManager.createDialog(0, "Обновление", "", "Ок", "", `У вас устаревшая версия (${info.version}). Актуальная версия: ${auth.data.admin.version}. Вы можете скачать обновление: {https://github.com/kramerforster/Nion-Tools/releases/download/v${info.version}/NionTools.zip|Скачать обновление|#38afec}`)
+        if (auth.data.admin.version !== info.version) return InterfaceManager.createDialog(0, "Обновление", "", "Ок", "", `У вас устаревшая версия (${info.version}). Актуальная версия: ${auth.data.admin.version}. Вы можете скачать обновление: {https://github.com/kramerforster/Nion-Tools/releases/download/v${auth.data.admin.version}/NionTools.zip|Скачать обновление|#38afec}`)
     },
     load() {
         if (!info.i) {
