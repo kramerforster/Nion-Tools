@@ -36,7 +36,7 @@ export const Report = {
                 return;
             }
 
-            const responseMatch = /^(?:Администратор|Агент поддержки)\s+(.+?)\[\d+\]\s+для\s+(.+?)\[\d+\]:\s+(.+?)\{btn:\d+:\d+:\d+\}/.exec(args[0]);
+            const responseMatch = /(?:Администратор|Агент поддержки)\s+(.+?)\[\d+\]\s+для\s+(.+?)\[\d+\]:\s+(.+?)\{btn:\d+:\d+:\d+\}/.exec(args[0]);
             if (responseMatch) {
                 const relatedReports = this.data.reports.filter(r => r.cleanNick === cleanNick(responseMatch[2]).toLowerCase() && !r.answered);
                 if (relatedReports.length > 0) {
@@ -76,7 +76,7 @@ export const Report = {
                 });
             }
 
-            const rmuteMatch = /^Администратор\s+(.+?)(?:\[\d+\])?\s+заблокировал репорт игроку\s+(.+?)(?:\[\d+\])?\s+на\s+(\d+)\s+мин/.exec(args[0]);
+            const rmuteMatch = /Администратор\s+(.+?)(?:\[\d+\])?\s+заблокировал репорт игроку\s+(.+?)(?:\[\d+\])?\s+на\s+(\d+)\s+мин/.exec(args[0]);
             if (rmuteMatch) {
                 const relatedReports = this.data.reports.filter(r => !r.answered && r.cleanNick === cleanNick(rmuteMatch[2]).toLowerCase());
                 relatedReports.forEach(lastReport => {
