@@ -123,12 +123,8 @@ export const InterfaceSP = {
             btn.style.borderRadius = "6px";
             btn.style.transition = "0.2s";
             btn.style.color = "#fff";
-
-            if (index < list.length - 1) {
-                btn.style.marginRight = "4px";
-            }
+            if (index < list.length - 1) btn.style.marginRight = "4px";
             btn.style.marginBottom = "4px";
-
             btn.onmouseenter = () => {
                 btn.style.background = "#ffb200";
                 btn.style.color = "#2b1a05";

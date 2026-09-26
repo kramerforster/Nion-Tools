@@ -8,7 +8,7 @@ InterfaceManager.registerInterfChat((args) => {
     if (reportMatch) {
         const player = Array.from(info.players.values()).find(p => p.id == reportMatch[1]);
         const lvl = player ? player.score : null;
-        const iconid = info.icons.find(icon => icon.title === "sp").id;
+        const iconid = info.icons.find(icon => icon.title === "sp")?.id;
         const button = (iconid !== undefined && iconid !== null) ? ` {btn:${iconid}:1001:${reportMatch[1]}}` : '';
         args[0] += (lvl !== null ? `, Score: ${lvl}` : '') + button;
         return;

@@ -6,10 +6,21 @@ import { Report } from './Report';
 import { functions } from './functions';
 
 export function initCmds() {
+
+    InterfaceManager.registerCommand("/tplist", (args) => {
+        if (args[0] !== undefined && !isNaN(args[0])) {
+            functions.tplist.category = Number(args[0]);
+            if (args[1] !== undefined && !isNaN(args[1])) {
+                functions.tplist.selected = Number(args[1]);
+            } else {
+                functions.tplist.selected = undefined;
+            }
+        }
+    }, false);
+
     InterfaceManager.registerCommand("/tpr", async(params) => {
         const id = params[0];
         let carHp = 0;
-
         if (window.getInterfaceStatus("AdminSpectate")) {
             carHp = window.interface("AdminSpectate").player.carHp;
             const tp = await functions.goto(window.interface("AdminSpectate").player.id);
@@ -1306,12 +1317,10 @@ export function initCmds() {
 
         const unregisterDialog = InterfaceManager.registerDialog(["Присоединиться к семье?", "семьи в игре"], () => {
             if (!InterfaceManager.isChecking) return;
-            window.sendClientEvent(0, { ignoreChat: true }, "OnDialogResponse", 0, 1, 1, `Nion Tools`);
+            window.sendClientEvent(0, { ignoreChat: true }, "OnDialogResponse", 0, 1, 1, "Nion Tools");
             setTimeout(() => {
                 const dialog = window.currentDialog();
-                if (dialog && ["присоединиться к семье?", "семьи в игре"].some(p => dialog.title.toLowerCase().includes(p))) {
-                    window.closeLastDialog();
-                }
+                if (dialog && ["присоединиться к семье?", "семьи в игре"].some(p => dialog.title.toLowerCase().includes(p))) window.closeLastDialog();
             }, 100);
         });
 

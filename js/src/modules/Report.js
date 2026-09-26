@@ -41,11 +41,10 @@ export const Report = {
                 const relatedReports = this.data.reports.filter(r => r.cleanNick === cleanNick(responseMatch[2]).toLowerCase() && !r.answered);
                 if (relatedReports.length > 0) {
                     const lastReport = relatedReports[relatedReports.length - 1];
-                    if (lastReport.answered) return;
-                    lastReport.answered = true;
-                    if (this.data.enabled) {
-                        const chat = window.interface("Hud").$refs.chat.messages;
-                        if (chat) {
+                    if (!lastReport.answered) {
+                        lastReport.answered = true;
+                        if (this.data.enabled) {
+                            const chat = window.interface("Hud").$refs.chat.messages;
                             chat.forEach((msg) => {
                                 if (msg.content.map(p => p.text).join(" ").includes(lastReport.nick)) {
                                     msg.content.forEach(p => {
@@ -62,7 +61,6 @@ export const Report = {
                         }
                     }
                 }
-                return;
             }
 
             const nickChangeMatch = /\[A\]\s+\S+\[\d+\]\s+принял заявку на смену ника с\s+(.+?)\s+на\s+(.+)$/.exec(args[0]);
@@ -76,24 +74,20 @@ export const Report = {
                     r.nick = newNick;
                     r.cleanNick = newNick.toLowerCase();
                 });
-                return;
             }
 
             const rmuteMatch = /^Администратор\s+(.+?)(?:\[\d+\])?\s+заблокировал репорт игроку\s+(.+?)(?:\[\d+\])?\s+на\s+(\d+)\s+мин/.exec(args[0]);
             if (rmuteMatch) {
                 const relatedReports = this.data.reports.filter(r => !r.answered && r.cleanNick === cleanNick(rmuteMatch[2]).toLowerCase());
                 relatedReports.forEach(lastReport => {
-                    if (lastReport.answered) return;
-                    lastReport.answered = true;
-                    if (this.data.enabled) {
-                        const chat = window.interface("Hud").$refs.chat.messages;
-                        if (chat) {
+                    if (!lastReport.answered) {
+                        lastReport.answered = true;
+                        if (this.data.enabled) {
+                            const chat = window.interface("Hud").$refs.chat.messages;
                             chat.forEach((msg) => {
                                 if (msg.content.map(p => p.text).join(" ").includes(lastReport.nick)) {
                                     msg.content.forEach(p => {
-                                        if (p.text.includes("[!]")) {
-                                            p.color = "8751f0";
-                                        }
+                                        if (p.text.includes("[!]")) p.color = "8751f0";
                                     });
                                 }
                             });
@@ -107,16 +101,13 @@ export const Report = {
             if (!this.data.enabled) return;
             const relatedReports = this.data.reports.filter(r => !r.answered && r.cleanNick === player.name.toLowerCase());
             relatedReports.forEach(lastReport => {
-                if (lastReport.answered) return;
-                lastReport.answered = true;
-                const chat = window.interface("Hud").$refs.chat.messages;
-                if (chat) {
+                if (!lastReport.answered) {
+                    lastReport.answered = true;
+                    const chat = window.interface("Hud").$refs.chat.messages;
                     chat.forEach((msg) => {
                         if (msg.content.map(p => p.text).join(" ").includes(lastReport.nick)) {
                             msg.content.forEach(p => {
-                                if (p.text.includes("[!]")) {
-                                    p.color = "8751f0";
-                                }
+                                if (p.text.includes("[!]")) p.color = "8751f0";
                             });
                         }
                     });

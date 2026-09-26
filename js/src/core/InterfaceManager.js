@@ -603,8 +603,8 @@ export const InterfaceManager = {
         if (Array.isArray(val)) return val.map(v => this.parseCopyTags(v));
         return typeof val === 'string' ? val.replace(/\{copy:([^\|\}]+)\}/g, '{copy:$1|$1|3b82f6}') : val;
     },
-    createDialog(dialogType = 0, title = "Заглавие", subtitle = "Подзаголовок", acceptButton = "Выбрать", rejectButton = "Закрыть", content = "Text",  onAccept = () => {}, onReject = () => {}) {
-        if (window.IsDialogOpened()) this.closeDialog();
+    createDialog(dialogType = 0, title = "Заглавие", subtitle = "Подзаголовок", acceptButton = "Выбрать", rejectButton = "Закрыть", content = "Text", onAccept = () => {}, onReject = () => {}) {
+        if (window.IsDialogOpened()) return
         content = this.parseCopyTags(content);
         if (!this.originals.sendClientEvent) {
             this.originals.sendClientEvent = window.sendClientEvent;
@@ -612,7 +612,7 @@ export const InterfaceManager = {
             window.sendClientEvent = new Proxy(window.sendClientEvent, {
                 apply: (target, self, args) => {
                     if (!window.isFakeDialog) return Reflect.apply(target, self, args);
-                    
+
                     const isResponse = args.includes("OnDialogResponse");
                     if (isResponse || args.includes("OnMultiDialogClickNavigButton")) {
                         if (this.originals.sendClientEvent) {
@@ -623,9 +623,9 @@ export const InterfaceManager = {
                             window.addDialogInQueue = this.originals.addDialogInQueue;
                             this.originals.addDialogInQueue = null;
                         }
-                        
+
                         window.isFakeDialog = false;
-                        
+
                         if (isResponse) {
                             setTimeout(() => {
                                 args[3] === 1 ? onAccept(args[5].replace(/<[^>]*>|HLDialog/g, "")) : onReject();
@@ -640,7 +640,7 @@ export const InterfaceManager = {
                     return Reflect.apply(target, self, args);
                 }
             });
-            
+
             window.addDialogInQueue = new Proxy(window.addDialogInQueue, {
                 apply: (target, self, args) => {
                     window.isFakeDialog = args[1].includes("HLDialog");
@@ -654,7 +654,7 @@ export const InterfaceManager = {
         const navButtons = isArray ? [+(this.dialogIndex > 0), +(this.dialogIndex < content.length - 1)] : [0, 0];
         window.addDialogInQueue(`[0,${dialogType},"${title}","${subtitle}","${acceptButton}","${rejectButton}",${navButtons[0]},${navButtons[1]}]`, "HLDialog" + (isArray ? content[this.dialogIndex] : content), 0);
     },
-    init() { 
+    init() {
         const chat = window.interface("Hud").$refs.chat;
         const originalAssign = Object.assign;
         Object.assign = (target, ...sources) => {

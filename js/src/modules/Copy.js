@@ -27,7 +27,7 @@ export const Copy = {
             const message = content.textContent.trim();
             let copyText = "";
             if (info.copy === false) {
-                const matches = message.match(/\b[A-Za-z0-9]+_[A-Za-z0-9]+\b/g);
+                const matches = message.replace(/\[\d+\]/g, "").trim().match(/\b[A-Za-z0-9]+_[A-Za-z0-9]+\b/g);
                 copyText = matches ? matches.join(" ") : message;
             } else if (Array.isArray(this.patterns)) {
                 for (let i = 0; i < this.patterns.length; i++) {
