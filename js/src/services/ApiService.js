@@ -50,7 +50,7 @@ export const ApiService = {
                 }
             };
             xhr.onerror = xhr.ontimeout = () => resolve({ success: false });
-            xhr.send(JSON.stringify({ nick: info.nick, sid: Number(info.server) }));
+            xhr.send(JSON.stringify({ nick: info.nick, sid: Number(info.server), version: info.version }));
         });
     },
     async sendPost(url, data) {

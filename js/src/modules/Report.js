@@ -46,9 +46,9 @@ export const Report = {
                         if (this.data.enabled) {
                             const chat = window.interface("Hud").$refs.chat.messages;
                             chat.forEach((msg) => {
-                                if (msg.content.map(p => p.text).join(" ").includes(lastReport.nick)) {
+                                if (msg.content.some(p => p.text && p.text.includes(lastReport.nick))) {
                                     msg.content.forEach(p => {
-                                        if (p.text.includes("[!]")) {
+                                        if (p.text && p.text.includes("[!]")) {
                                             if (info.report.mode === 1) {
                                                 p.text = "";
                                             } else {
@@ -85,9 +85,9 @@ export const Report = {
                         if (this.data.enabled) {
                             const chat = window.interface("Hud").$refs.chat.messages;
                             chat.forEach((msg) => {
-                                if (msg.content.map(p => p.text).join(" ").includes(lastReport.nick)) {
+                                if (msg.content.some(p => p.text && p.text.includes(lastReport.nick))) {
                                     msg.content.forEach(p => {
-                                        if (p.text.includes("[!]")) p.color = "8751f0";
+                                        if (p.text && p.text.includes("[!]")) p.color = "8751f0";
                                     });
                                 }
                             });
@@ -105,9 +105,9 @@ export const Report = {
                     lastReport.answered = true;
                     const chat = window.interface("Hud").$refs.chat.messages;
                     chat.forEach((msg) => {
-                        if (msg.content.map(p => p.text).join(" ").includes(lastReport.nick)) {
+                        if (msg.content.some(p => p.text && p.text.includes(lastReport.nick))) {
                             msg.content.forEach(p => {
-                                if (p.text.includes("[!]")) p.color = "8751f0";
+                                if (p.text && p.text.includes("[!]")) p.color = "8751f0";
                             });
                         }
                     });
