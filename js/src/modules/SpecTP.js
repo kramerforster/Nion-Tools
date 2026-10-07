@@ -14,10 +14,15 @@ export const SpecTP = {
             if (info.keybindSpecTP.includes(e.code) && info.keybindSpecTP.every(c => this.data.pressed[c])) {
                 if (!window.getInterfaceStatus("AdminSpectate")) return;
                 let sid = window.interface("AdminSpectate").player.id
+                let carHp = window.interface("AdminSpectate").player.carHp;
                 const tp = await functions.goto(sid);
                 if (!tp) return InterfaceManager.send("Функция goto не дождалась ответа");
                 window.sendChatInput("/fly");
-                window.interface("Hud").$refs.chat.inputHint(`/tpcar ${sid}`)
+                if (carHp <= 0) {
+                    window.interface("Hud").$refs.chat.inputHint(`/gethere ${sid}`);
+                } else {
+                    window.interface("Hud").$refs.chat.inputHint(`/tpcar ${sid}`);
+                }
             }
         });
         document.addEventListener('keyup', (e) => {

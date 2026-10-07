@@ -592,10 +592,6 @@ export const InterfaceManager = {
             if (index > -1) this.listeners.commands.splice(index, 1);
         };
     },
-    closeDialog() {
-        window.sendClientEvent(0, { ignoreChat: true }, "OnDialogResponse", 0, 1, -1, "");
-        window.closeLastDialog();
-    },
     send(text) {
         window.onChatMessage("[Nion Tools] {FFFFFF}" + text, "ff6421f2")
     },
@@ -604,7 +600,8 @@ export const InterfaceManager = {
         return typeof val === 'string' ? val.replace(/\{copy:([^\|\}]+)\}/g, '{copy:$1|$1|3b82f6}') : val;
     },
     createDialog(dialogType = 0, title = "Заглавие", subtitle = "Подзаголовок", acceptButton = "Выбрать", rejectButton = "Закрыть", content = "Text", onAccept = () => {}, onReject = () => {}) {
-        if (window.IsDialogOpened()) return
+        const dialog = window.currentDialog();
+        if (dialog && dialog.openParams && !dialog.openParams[8]) window.sendClientEvent(0, { ignoreChat: true }, "OnDialogResponse", dialog.openParams[0], 0, -1, "");
         content = this.parseCopyTags(content);
         if (!this.originals.sendClientEvent) {
             this.originals.sendClientEvent = window.sendClientEvent;
@@ -612,9 +609,7 @@ export const InterfaceManager = {
             window.sendClientEvent = new Proxy(window.sendClientEvent, {
                 apply: (target, self, args) => {
                     if (!window.isFakeDialog) return Reflect.apply(target, self, args);
-
-                    const isResponse = args.includes("OnDialogResponse");
-                    if (isResponse || args.includes("OnMultiDialogClickNavigButton")) {
+                    if (args.includes("OnDialogResponse") || args.includes("OnMultiDialogClickNavigButton")) {
                         if (this.originals.sendClientEvent) {
                             window.sendClientEvent = this.originals.sendClientEvent;
                             this.originals.sendClientEvent = null;
@@ -623,10 +618,8 @@ export const InterfaceManager = {
                             window.addDialogInQueue = this.originals.addDialogInQueue;
                             this.originals.addDialogInQueue = null;
                         }
-
                         window.isFakeDialog = false;
-
-                        if (isResponse) {
+                        if (args.includes("OnDialogResponse")) {
                             setTimeout(() => {
                                 args[3] === 1 ? onAccept(args[5].replace(/<[^>]*>|HLDialog/g, "")) : onReject();
                             }, 16);

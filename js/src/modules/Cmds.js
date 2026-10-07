@@ -742,7 +742,8 @@ export function initCmds() {
                             const afterWait = Date.now();
                             while (container.findLog.length && afterWait - container.findLog[0] > 30000) container.findLog.shift();
                         }
-                        const onlinePlayer = Array.from(info.players.values()).find(player => player.name.trim().toLowerCase() === name.trim().toLowerCase());
+                        const searchName = name.trim().toLowerCase();
+                        const onlinePlayer = Array.from(info.players.values()).find(player => player.name.trim().toLowerCase() === searchName || player.fakeName ?.trim().toLowerCase() === searchName);
                         if (onlinePlayer) {
                             window.sendChatInput(`/kick ${name}`);
                             await functions.kick(name)
@@ -1301,6 +1302,7 @@ export function initCmds() {
 
         menu();
     }, true);
+    
     InterfaceManager.registerCommand("/mansions", async({
         mansions = [
             { name: "Западный особняк", ownerId: null, ownerName: null, founder: null },
@@ -1447,7 +1449,7 @@ export function initCmds() {
 
         const resultText = mansions.map(m => {
             return (m.ownerId !== null && m.ownerId >= 0) ? `${m.name}<n>Владелец: {copy:${m.ownerName}} (ID: ${m.ownerId})<n>Основатель: {copy:${m.founder || "не найден"}}` : `${m.name}<n>Свободен`;
-        }).join("<n");
+        }).join("<n>");
         InterfaceManager.createDialog(0, "Результаты проверки", "", "Закрыть", "", resultText);
     }, true);
 

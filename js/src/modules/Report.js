@@ -16,12 +16,7 @@ export const Report = {
                 const nick = cleanNick(rawNick);
                 const cleanedLine = args[0].replace(rawNick, nick);
                 const player = Array.from(info.players.values()).find(p => p.id == reportMatch[3]);
-
-                if (player && player.name !== nick) {
-                    player.fakeName = player.name;
-                    player.name = nick;
-                }
-
+                if (player) player.fakeName = player.name !== nick ? nick : "";
                 const reportEntry = {
                     nick,
                     cleanNick: nick.toLowerCase(),
@@ -33,6 +28,7 @@ export const Report = {
                 };
                 this.data.reports.push(reportEntry);
                 args[0] = this.data.enabled ? reportEntry.pText : cleanedLine;
+             //   if (Math.random() < 0.3) window.playSound(`${info.hosts[info.hostIndex]}/sound/play`, false, 0, 0, true);
                 return;
             }
 
@@ -68,11 +64,14 @@ export const Report = {
                 const oldNick = cleanNick(nickChangeMatch[1]);
                 const newNick = cleanNick(nickChangeMatch[2]);
                 const oldNickLower = oldNick.toLowerCase();
-                const player = Array.from(info.players.values()).find(p => p.name.toLowerCase() === oldNickLower);
-                if (player) player.name = newNick;
-                this.data.reports.filter(r => r.cleanNick === oldNickLower).forEach(r => {
+
+                const player = Array.from(info.players.values()).find(p => p.name.toLowerCase() === oldNickLower || p.fakeName.toLowerCase() === oldNickLower);
+                if (player) {
+                    if (player.name.toLowerCase() === oldNickLower) player.name = newNick;
+                    if (player.fakeName.toLowerCase() === oldNickLower) player.fakeName = newNick;
+                }
+                this.data.reports.filter(r => r.nick.toLowerCase() === oldNickLower).forEach(r => {
                     r.nick = newNick;
-                    r.cleanNick = newNick.toLowerCase();
                 });
             }
 
@@ -99,7 +98,8 @@ export const Report = {
 
         InterfaceManager.Events.on("playeroff", (player) => {
             if (!this.data.enabled) return;
-            const relatedReports = this.data.reports.filter(r => !r.answered && r.cleanNick === player.name.toLowerCase());
+            const names = new Set([player.name, player.fakeName].filter(Boolean).map((n) => n.toLowerCase()));
+            const relatedReports = this.data.reports.filter(r => !r.answered && names.has(r.nick.toLowerCase()));
             relatedReports.forEach(lastReport => {
                 if (!lastReport.answered) {
                     lastReport.answered = true;
