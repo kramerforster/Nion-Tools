@@ -601,7 +601,7 @@ export const InterfaceManager = {
     },
     createDialog(dialogType = 0, title = "Заглавие", subtitle = "Подзаголовок", acceptButton = "Выбрать", rejectButton = "Закрыть", content = "Text", onAccept = () => {}, onReject = () => {}) {
         const dialog = window.currentDialog();
-        if (dialog && dialog.openParams && !dialog.openParams[8]) window.sendClientEvent(0, { ignoreChat: true }, "OnDialogResponse", dialog.openParams[0], 0, -1, "");
+        if (dialog && dialog.openParams && !window.isFakeDialog) window.sendClientEvent(0, { ignoreChat: true }, "OnDialogResponse", dialog.openParams[0], 0, -1, "");
         content = this.parseCopyTags(content);
         if (!this.originals.sendClientEvent) {
             this.originals.sendClientEvent = window.sendClientEvent;
