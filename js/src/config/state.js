@@ -1,6 +1,6 @@
 export const info = {
     i: false,
-    version: '1.2.7',
+    version: '1.2.8',
     nick: undefined,
     server: undefined,
     auth: false,
