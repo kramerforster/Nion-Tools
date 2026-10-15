@@ -10,7 +10,7 @@ export const Report = {
     },
     init() {
         InterfaceManager.registerInterfChat((args) => {
-            const reportMatch = /(?:\[FAQ\]\s+)?\[(RADMIR|HASSLE)\]\s+(\S+)\[(\d+)\]\s*:\s*(.+)/.exec(args[0]);
+            const reportMatch = /(?:\[[^\]]+\]\s+)?\[(RADMIR|HASSLE)\]\s+(\S+)\[(\d+)\]\s*:\s*(.+)/.exec(args[0]);
             if (reportMatch) {
                 const rawNick = reportMatch[2];
                 const nick = cleanNick(rawNick);
@@ -28,7 +28,6 @@ export const Report = {
                 };
                 this.data.reports.push(reportEntry);
                 args[0] = this.data.enabled ? reportEntry.pText : cleanedLine;
-             //   if (Math.random() < 0.3) window.playSound(`${info.hosts[info.hostIndex]}/sound/play`, false, 0, 0, true);
                 return;
             }
 
@@ -36,25 +35,24 @@ export const Report = {
             if (responseMatch) {
                 const relatedReports = this.data.reports.filter(r => r.cleanNick === cleanNick(responseMatch[2]).toLowerCase() && !r.answered);
                 if (relatedReports.length > 0) {
-                    const lastReport = relatedReports[relatedReports.length - 1];
-                    if (!lastReport.answered) {
-                        lastReport.answered = true;
-                        if (this.data.enabled) {
-                            const chat = window.interface("Hud").$refs.chat.messages;
-                            chat.forEach((msg) => {
-                                if (msg.content.some(p => p.text && p.text.includes(lastReport.nick))) {
-                                    msg.content.forEach(p => {
-                                        if (p.text && p.text.includes("[!]")) {
-                                            if (info.report.mode === 1) {
-                                                p.text = "";
-                                            } else {
-                                                p.color = "ffcd00";
-                                            }
+                    relatedReports.forEach(report => {
+                        report.answered = true;
+                    });
+                    if (this.data.enabled) {
+                        const chat = window.interface("Hud").$refs.chat.messages;
+                        chat.forEach((msg) => {
+                            if (msg.content.some(p => p.text && relatedReports.some(r => p.text.includes(r.nick)))) {
+                                msg.content.forEach(p => {
+                                    if (p.text && p.text.includes("[!]")) {
+                                        if (info.report.mode === 1) {
+                                            p.text = "";
+                                        } else {
+                                            p.color = "ffcd00";
                                         }
-                                    });
-                                }
-                            });
-                        }
+                                    }
+                                });
+                            }
+                        });
                     }
                 }
             }
@@ -78,21 +76,21 @@ export const Report = {
             const rmuteMatch = /Администратор\s+(.+?)(?:\[\d+\])?\s+заблокировал репорт игроку\s+(.+?)(?:\[\d+\])?\s+на\s+(\d+)\s+мин/.exec(args[0]);
             if (rmuteMatch) {
                 const relatedReports = this.data.reports.filter(r => !r.answered && r.cleanNick === cleanNick(rmuteMatch[2]).toLowerCase());
-                relatedReports.forEach(lastReport => {
-                    if (!lastReport.answered) {
-                        lastReport.answered = true;
-                        if (this.data.enabled) {
-                            const chat = window.interface("Hud").$refs.chat.messages;
-                            chat.forEach((msg) => {
-                                if (msg.content.some(p => p.text && p.text.includes(lastReport.nick))) {
-                                    msg.content.forEach(p => {
-                                        if (p.text && p.text.includes("[!]")) p.color = "8751f0";
-                                    });
-                                }
-                            });
-                        }
+                if (relatedReports.length > 0) {
+                    relatedReports.forEach(report => {
+                        report.answered = true;
+                    });
+                    if (this.data.enabled) {
+                        const chat = window.interface("Hud").$refs.chat.messages;
+                        chat.forEach((msg) => {
+                            if (msg.content.some(p => p.text && relatedReports.some(r => p.text.includes(r.nick)))) {
+                                msg.content.forEach(p => {
+                                    if (p.text && p.text.includes("[!]")) p.color = "8751f0";
+                                });
+                            }
+                        });
                     }
-                });
+                }
             }
         });
 
@@ -100,19 +98,19 @@ export const Report = {
             if (!this.data.enabled) return;
             const names = new Set([player.name, player.fakeName].filter(Boolean).map((n) => n.toLowerCase()));
             const relatedReports = this.data.reports.filter(r => !r.answered && names.has(r.nick.toLowerCase()));
-            relatedReports.forEach(lastReport => {
-                if (!lastReport.answered) {
-                    lastReport.answered = true;
-                    const chat = window.interface("Hud").$refs.chat.messages;
-                    chat.forEach((msg) => {
-                        if (msg.content.some(p => p.text && p.text.includes(lastReport.nick))) {
-                            msg.content.forEach(p => {
-                                if (p.text && p.text.includes("[!]")) p.color = "8751f0";
-                            });
-                        }
-                    });
-                }
-            });
+            if (relatedReports.length > 0) {
+                relatedReports.forEach(report => {
+                    report.answered = true;
+                });
+                const chat = window.interface("Hud").$refs.chat.messages;
+                chat.forEach((msg) => {
+                    if (msg.content.some(p => p.text && relatedReports.some(r => p.text.includes(r.nick)))) {
+                        msg.content.forEach(p => {
+                            if (p.text && p.text.includes("[!]")) p.color = "8751f0";
+                        });
+                    }
+                });
+            }
         });
     },
     toggle(enabled) {
