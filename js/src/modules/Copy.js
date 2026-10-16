@@ -21,6 +21,7 @@ export const Copy = {
         if (!container) return;
         container.addEventListener("click", (e) => {
             if (!this.data.enabled) return;
+            if(!window.cursorStatus) return
             if (e.target.closest(".chat-message-content__action")) return;
             const content = e.target.closest(".chat-message-content");
             if (!content) return;

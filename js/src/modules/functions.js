@@ -7,6 +7,7 @@ const tplist = {
 
 InterfaceManager.registerDialog(["телепортов", "Телепорт"], (args) => {
     if (tplist.category === undefined && tplist.selected === undefined) return;
+    if (tplist.category === 0 && tplist.selected === undefined) return tplist.category = undefined;
     const dialog = JSON.parse(args[0]);
 
     if (dialog[2].includes("глобальных телепортов") && tplist.category !== undefined) {
@@ -35,10 +36,10 @@ InterfaceManager.registerDialog(["телепортов", "Телепорт"], (a
         setTimeout(() => {
             window.closeLastDialog();
         }, 32);
-        tplist.category = undefined;
-        tplist.selected = undefined;
-        return;
     }
+    tplist.category = undefined;
+    tplist.selected = undefined;
+
 });
 
 function kick(nick) {

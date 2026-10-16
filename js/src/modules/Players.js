@@ -77,17 +77,15 @@ export function initPlayers() {
                     const isSamePlayer = newPlayer.score !== 0 && (cachedPlayer.score === newPlayer.score || cachedPlayer.score === newPlayer.score - 1);
                     if (isSamePlayer) {
                         if (cachedPlayer.name !== newPlayer.name) {
-                            const oldName = cachedPlayer.name;
-                            const newName = String(newPlayer.name);
-                            if (oldName.startsWith("Mask_")) {
-                                cachedPlayer.name = newName;
+                            if (newPlayer.name.startsWith("Mask_")) {
+                                if (!cachedPlayer.name.startsWith("Mask_")) cachedPlayer.fakeName = cachedPlayer.name;
+                                cachedPlayer.name = newPlayer.name;
+                            } else if (cachedPlayer.name.startsWith("Mask_")) {
+                                cachedPlayer.name = newPlayer.name;
                                 cachedPlayer.fakeName = "";
-                            } else if (newName.startsWith("Mask_")) {
-                                cachedPlayer.fakeName = oldName;
-                                cachedPlayer.name = newName;
-                            } else if (cachedPlayer.fakeName !== newName) {
-                                cachedPlayer.fakeName = oldName;
-                                cachedPlayer.name = newName;
+                            } else if (cachedPlayer.fakeName !== newPlayer.name) {
+                                cachedPlayer.fakeName = cachedPlayer.name;
+                                cachedPlayer.name = newPlayer.name;
                             }
                         }
                         cachedPlayer.ping = newPlayer.ping;

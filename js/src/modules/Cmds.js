@@ -1302,7 +1302,7 @@ export function initCmds() {
 
         menu();
     }, true);
-    
+
     InterfaceManager.registerCommand("/mansions", async({
         mansions = [
             { name: "Западный особняк", ownerId: null, ownerName: null, founder: null },
