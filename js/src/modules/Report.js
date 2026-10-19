@@ -3,6 +3,19 @@ import { info } from '../config/state';
 
 const cleanNick = (s) => s.replace(/\[\d+\]/g, "").trim();
 
+const updateReportMessages = (reports, apply) => {
+    const chat = window.interface("Hud").$refs.chat.messages;
+    chat.forEach((msg) => {
+        if (msg.consider === false) return;
+        if (!msg.content.some(p => p.text && p.text.includes("[!]"))) return;
+        if (!msg.content.some(p => p.text && reports.some(r => p.text.includes(r.nick)))) return;
+        msg.content.forEach(p => {
+            if (p.text && p.text.includes("[!]")) apply(p);
+        });
+        msg.consider = false;
+    });
+};
+
 export const Report = {
     name: 'Report',
     data: {
@@ -23,6 +36,7 @@ export const Report = {
                     text: cleanedLine,
                     pText: `{ff2400}[!] {${args[1] ? args[1].slice(2) : 'ffffff'}}${cleanedLine}`,
                     color: args[1],
+                    consider: true,
                     answered: false,
                     message_time: Date.now()
                 };
@@ -33,24 +47,18 @@ export const Report = {
 
             const responseMatch = /(?:Администратор|Агент поддержки)\s+(.+?)\[\d+\]\s+для\s+(.+?)\[\d+\]:\s+(.+?)\{btn:\d+:\d+:\d+\}/.exec(args[0]);
             if (responseMatch) {
-                const relatedReports = this.data.reports.filter(r => r.cleanNick === cleanNick(responseMatch[2]).toLowerCase() && !r.answered);
+                const relatedReports = this.data.reports.filter(r => r.consider === true && r.cleanNick === cleanNick(responseMatch[2]).toLowerCase());
                 if (relatedReports.length > 0) {
                     relatedReports.forEach(report => {
+                        report.consider = false;
                         report.answered = true;
                     });
                     if (this.data.enabled) {
-                        const chat = window.interface("Hud").$refs.chat.messages;
-                        chat.forEach((msg) => {
-                            if (msg.content.some(p => p.text && relatedReports.some(r => p.text.includes(r.nick)))) {
-                                msg.content.forEach(p => {
-                                    if (p.text && p.text.includes("[!]")) {
-                                        if (info.report.mode === 1) {
-                                            p.text = "";
-                                        } else {
-                                            p.color = "ffcd00";
-                                        }
-                                    }
-                                });
+                        updateReportMessages(relatedReports, (p) => {
+                            if (info.report.mode === 1) {
+                                p.text = "";
+                            } else {
+                                p.color = "ffcd00";
                             }
                         });
                     }
@@ -75,19 +83,14 @@ export const Report = {
 
             const rmuteMatch = /Администратор\s+(.+?)(?:\[\d+\])?\s+заблокировал репорт игроку\s+(.+?)(?:\[\d+\])?\s+на\s+(\d+)\s+мин/.exec(args[0]);
             if (rmuteMatch) {
-                const relatedReports = this.data.reports.filter(r => !r.answered && r.cleanNick === cleanNick(rmuteMatch[2]).toLowerCase());
+                const relatedReports = this.data.reports.filter(r => r.consider === true && r.cleanNick === cleanNick(rmuteMatch[2]).toLowerCase());
                 if (relatedReports.length > 0) {
                     relatedReports.forEach(report => {
-                        report.answered = true;
+                        report.consider = false;
                     });
                     if (this.data.enabled) {
-                        const chat = window.interface("Hud").$refs.chat.messages;
-                        chat.forEach((msg) => {
-                            if (msg.content.some(p => p.text && relatedReports.some(r => p.text.includes(r.nick)))) {
-                                msg.content.forEach(p => {
-                                    if (p.text && p.text.includes("[!]")) p.color = "8751f0";
-                                });
-                            }
+                        updateReportMessages(relatedReports, (p) => {
+                            p.color = "8751f0";
                         });
                     }
                 }
@@ -97,18 +100,13 @@ export const Report = {
         InterfaceManager.Events.on("playeroff", (player) => {
             if (!this.data.enabled) return;
             const names = new Set([player.name, player.fakeName].filter(Boolean).map((n) => n.toLowerCase()));
-            const relatedReports = this.data.reports.filter(r => !r.answered && names.has(r.nick.toLowerCase()));
+            const relatedReports = this.data.reports.filter(r => r.consider === true && names.has(r.nick.toLowerCase()));
             if (relatedReports.length > 0) {
                 relatedReports.forEach(report => {
-                    report.answered = true;
+                    report.consider = false;
                 });
-                const chat = window.interface("Hud").$refs.chat.messages;
-                chat.forEach((msg) => {
-                    if (msg.content.some(p => p.text && relatedReports.some(r => p.text.includes(r.nick)))) {
-                        msg.content.forEach(p => {
-                            if (p.text && p.text.includes("[!]")) p.color = "8751f0";
-                        });
-                    }
+                updateReportMessages(relatedReports, (p) => {
+                    p.color = "8751f0";
                 });
             }
         });
