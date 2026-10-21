@@ -743,7 +743,7 @@ export function initCmds() {
                             while (container.findLog.length && afterWait - container.findLog[0] > 30000) container.findLog.shift();
                         }
                         const searchName = name.trim().toLowerCase();
-                        const onlinePlayer = Array.from(info.players.values()).find(player => player.name.trim().toLowerCase() === searchName || player.fakeName ?.trim().toLowerCase() === searchName);
+                        const onlinePlayer = Array.from(info.players.values()).find(player => player.name.trim().toLowerCase() === searchName || player.fakeName ?.toLowerCase() === searchName);
                         if (onlinePlayer) {
                             window.sendChatInput(`/kick ${name}`);
                             await functions.kick(name)
@@ -1463,11 +1463,8 @@ export function initCmds() {
         if (!Report.data.reports.length) return InterfaceManager.send(`Нет данных для анализа.`);
         const recentReports = Report.data.reports.filter(r => Date.now() - r.message_time <= 600000);
         if (!recentReports.length) return InterfaceManager.send("За последние 10 минут нет репортов.");
-        const answered = recentReports.filter(r => r.answered);
-        const unansweredPlayers = new Set(recentReports.filter(r => !r.answered).map(r => r.cleanNick));
-        const answeredCount = answered.length;
-        const total = answeredCount + unansweredPlayers.size;
-        const index = answeredCount / total;
-        InterfaceManager.send(`Индекс ответов: ${index.toFixed(2)} (${answeredCount}/${total})`);
+        const answeredCount = recentReports.filter(r => r.answered).length;
+        const index = answeredCount / recentReports.length;
+        InterfaceManager.send(`Индекс ответов: ${index.toFixed(2)} (${answeredCount}/${recentReports.length})`);
     }, true);
 }
