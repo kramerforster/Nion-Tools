@@ -7,7 +7,7 @@
 ⬇️ [Скачать последнюю версию](https://github.com/kramerforster/Nion-Tools/releases/latest)
 
 Все версии доступны в разделе [Releases](https://github.com/kramerforster/Nion-Tools/releases).
-
+ 
 ## 📦 Установка
 1. Скачайте [`loader-js` из админ-раздела](https://forum.radmir.games/attachments/loader-js-zip.514377/) от Юрия Ушахина.
 2. Поместите JS-скрипт в папку `uiresources`.
